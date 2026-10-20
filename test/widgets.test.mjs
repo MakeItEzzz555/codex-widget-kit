@@ -54,6 +54,19 @@ test('the frame draws rings, effort, tasks and one card per live agent', () => {
   assert.ok(text(frame({ main: root.thread, agents: [] }, 60, at)).includes('No agents running'))
 })
 
+test('text from the rollout cannot write terminal escapes', () => {
+  const { thread } = applyText(
+    emptyThread(),
+    `${JSON.stringify({ type: 'response_item', payload: { type: 'function_call', name: 'update_plan', arguments: JSON.stringify({ plan: [{ step: 'evil\u001b]52;c;aGk=\u0007\u009b2J', status: 'in_progress' }] }) } })}\n`,
+  )
+  const drawn = frame({ main: thread, agents: [{ ...emptyThread(), nickname: '\u001b[31mred' }] }, 80, at)
+    .map(line => toAnsi(line, true))
+    .join('\n')
+  assert.ok(!drawn.includes('\u0007') && !drawn.includes('\u009b') && !drawn.includes('\u001b]'))
+  assert.ok(drawn.includes('evil]52;c;aGk=2J'))
+  assert.ok(!drawn.includes('\u001b[31mred'))
+})
+
 test('the cli picks the newest top-level session for the folder and skips closed agents', () => {
   const out = execFileSync(process.execPath, [join(here, '../bin/codex-widgets.mjs'), '--once', '--cwd', '/work/app'], {
     env: { ...process.env, CODEX_HOME: fixtures, COLUMNS: '100' },
