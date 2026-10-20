@@ -12,6 +12,8 @@
 
 <sub>Conceptual illustration of the visual direction, not a live screenshot. The real terminal capture is below.</sub>
 
+[Social preview image · 1280 × 640](assets/social-preview.png)
+
 [![tests](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml/badge.svg)](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
 ![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
