@@ -1,0 +1,15 @@
+name: Widget idea
+description: Suggest a new widget
+labels: [widget-idea]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it show?
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Which data does Codex already record for it?
+      description: A rollout record type or field, if you know one. Never paste real prompts or outputs.

@@ -1,0 +1,5 @@
+# Codex's own status line, closest to the widget band. Merge into the [tui] table of ~/.codex/config.toml
+# (install.sh --statusline does this for you, with a backup). Every item is a built-in Codex status-line ID.
+[tui]
+status_line = ["model-with-reasoning", "task-progress", "context-remaining", "five-hour-limit", "weekly-limit", "run-state", "git-branch"]
+status_line_use_colors = true

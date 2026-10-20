@@ -1,0 +1,26 @@
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - name: Installer smoke test
+        run: |
+          export CODEX_HOME="$RUNNER_TEMP/codex" CODEX_WIDGET_KIT_BIN="$RUNNER_TEMP/bin" CODEX_WIDGET_KIT_REPO="$GITHUB_WORKSPACE"
+          mkdir -p "$CODEX_HOME" && printf '[tui]\nscreen_reader_detection_done = true\n' > "$CODEX_HOME/config.toml"
+          sh install.sh --statusline
+          grep -q '^status_line = ' "$CODEX_HOME/config.toml"
+          "$CODEX_WIDGET_KIT_BIN/codex-widgets" --once --cwd /nowhere | grep -q 'Waiting for a Codex session'
+          sh install.sh --uninstall
+          test ! -e "$CODEX_WIDGET_KIT_BIN/codex-widgets"

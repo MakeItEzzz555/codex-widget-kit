@@ -1,0 +1,48 @@
+{
+  "name": "codex-widget-kit",
+  "version": "0.1.0",
+  "description": "Live usage rings, effort meter, task ETA and sub-agent cards for OpenAI Codex CLI, in their own terminal pane.",
+  "type": "module",
+  "bin": {
+    "codex-widgets": "bin/codex-widgets.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "config",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/codex-widgets.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "codex",
+    "codex-cli",
+    "openai",
+    "terminal",
+    "tui",
+    "widgets",
+    "status-line",
+    "rate-limits",
+    "ai-agents",
+    "developer-tools"
+  ],
+  "author": "MakeItEzzz555",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MakeItEzzz555/codex-widget-kit.git"
+  },
+  "homepage": "https://github.com/MakeItEzzz555/codex-widget-kit#readme",
+  "bugs": "https://github.com/MakeItEzzz555/codex-widget-kit/issues"
+}
