@@ -44,14 +44,18 @@ if [ "${1:-}" = "--statusline" ]; then
   else
     BACKUP="$CONFIG.before-widget-kit-$(date +%Y%m%d-%H%M%S)"
     if [ -f "$CONFIG" ]; then cp -p "$CONFIG" "$BACKUP"; else : > "$BACKUP"; fi
-    LINES='status_line = ["model-with-reasoning", "task-progress", "context-remaining", "five-hour-limit", "weekly-limit", "run-state", "git-branch"]
+    WIDGET_KIT_LINES='status_line = ["model-with-reasoning", "task-progress", "context-remaining", "five-hour-limit", "weekly-limit", "run-state", "git-branch"]
 status_line_use_colors = true'
-    if [ -f "$CONFIG" ] && grep -q '^\[tui\] *$' "$CONFIG"; then
+    export WIDGET_KIT_LINES
+    NEXT="$CONFIG.widget-kit.$$"
+    if grep -q '^\[tui\] *$' "$BACKUP"; then
       # insert right under the existing [tui] header so the keys land in that table
-      awk -v lines="$LINES" '{ print } /^\[tui\] *$/ && !done { print lines; done = 1 }' "$BACKUP" > "$CONFIG"
+      awk '{ print } /^\[tui\] *$/ && !done { print ENVIRON["WIDGET_KIT_LINES"]; done = 1 }' "$BACKUP" > "$NEXT"
     else
-      { cat "$BACKUP"; printf '\n[tui]\n%s\n' "$LINES"; } > "$CONFIG"
+      { cat "$BACKUP"; printf '\n[tui]\n%s\n' "$WIDGET_KIT_LINES"; } > "$NEXT"
     fi
+    # config.toml is replaced only once the new file is complete
+    mv "$NEXT" "$CONFIG"
     say "turned on Codex's status line; backup at $BACKUP"
     diff -u "$BACKUP" "$CONFIG" || true
   fi
