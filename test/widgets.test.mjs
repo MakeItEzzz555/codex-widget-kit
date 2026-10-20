@@ -73,6 +73,11 @@ test('a command shows its program and subcommand, never its arguments or environ
   assert.equal(commandName(['/usr/bin/python3', '/tmp/x.py']), 'python3')
   assert.equal(commandName(['/bin/sh', '-c', '"$(echo hi)"']), 'a command')
   assert.equal(shortPath('/Users/someone/private/app/src/widget.ts'), 'src/widget.ts')
+  // a second word shows only for programs with subcommands, and only when it looks like one
+  for (const command of ['echo ghp_abcdefghij1234567890', 'ssh me@10.0.0.1', 'cat secrets.env', 'echo hunter2pass']) {
+    assert.equal(commandName(['/bin/zsh', '-lc', command]), command.split(' ')[0])
+  }
+  assert.equal(commandName(['/bin/zsh', '-lc', 'git push2 origin']), 'git')
 })
 
 const live = () => {
@@ -219,4 +224,24 @@ test('the cli picks the newest top-level session for the folder and skips closed
     encoding: 'utf8',
   })
   assert.match(none, /Waiting for a Codex session in \/elsewhere/)
+})
+
+test('wide, bidi and zero-width text cannot break a row or reorder it', () => {
+  const plan = JSON.stringify({ plan: [{ step: '修复所有测试用例并更新文档说明\u202egnp.exe\u200b\u2028x', status: 'in_progress' }] })
+  const { thread } = applyText(emptyThread(), `${JSON.stringify({ type: 'response_item', payload: { type: 'function_call', name: 'update_plan', arguments: plan } })}\n`)
+  for (const columns of [40, 80, 132]) {
+    const drawn = frame({ main: thread, agents: [] }, columns, at).map(line => toAnsi(line, false))
+    for (const line of drawn) {
+      const cells = [...line].reduce((sum, char) => sum + (/[\u3000-\u9fff]/.test(char) ? 2 : 1), 0)
+      assert.ok(cells <= columns, `${columns}: ${line}`)
+      assert.ok(!/[\u202e\u200b\u2028]/.test(line))
+    }
+  }
+})
+
+test('a limit past its reset time says so instead of showing a stale reading as current', () => {
+  const thread = { ...emptyThread(), usage: { fiveHour: 40, week: null, context: null }, resets: { fiveHour: at - 1000, week: null } }
+  const drawn = text(frame({ main: thread, agents: [] }, 100, at))
+  assert.ok(drawn.includes('reset due · waiting for a new reading'))
+  assert.ok(!drawn.includes('resets in 0s'))
 })
