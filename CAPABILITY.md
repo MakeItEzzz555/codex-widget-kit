@@ -15,6 +15,26 @@ How each `turn-meters` feature from the [Claude Widget Kit](https://github.com/M
 | ETA ticker | Redraw every second | **Identical** | — |
 | Status line | `[tui].status_line` built-in IDs | **Native** | `codex-rs/tui/src/bottom_pane/status_line_setup.rs` `StatusLineItem` (kebab-case): `model-with-reasoning`, `task-progress`, `context-remaining`, `five-hour-limit`, `weekly-limit`, `run-state`, `git-branch`. |
 
+## v0.2.0 dashboard: source of truth per reading
+
+| Reading | Field | Notes |
+|---|---|---|
+| Session elapsed | first `session_meta` record's `timestamp` | Time since the session started |
+| Running / idle | `task_started` → running; `task_complete` / `turn_aborted` → idle | |
+| Live turn | `task_started` timestamp | Cleared when the turn ends |
+| Completed turns, avg, last | `task_complete.duration_ms` (falls back to the timestamps) | A `task_complete` with `error` set (a usage limit, say) shows as "Turn ended with an error" and is not counted. No denominator: Codex has no turn quota |
+| Tokens | `token_count.info.total_token_usage` `input_tokens`, `cached_input_tokens`, `output_tokens`, `reasoning_output_tokens`, `total_tokens` | Cumulative, as Codex reports them. A repeated `token_count` with the same total is not a new request |
+| Output per request | growth of `output_tokens` between token counts | Sparkline of the last requests |
+| Context left | `last_token_usage.total_tokens`, `model_context_window` | Codex's own formula, 12k baseline. The "tokens in window" line is the raw count |
+| Compactions | `item_completed` `ContextCompaction` | |
+| Limits | `rate_limits.primary/secondary` `used_percent`, `window_minutes`, `resets_at` | Countdown only when `resets_at` is present |
+| Activity | `item_completed` `CommandExecution` (`command`, `exit_code`), `FileChange` (paths, change type), `McpToolCall` (`server`, `tool`, `status`), `SubAgentActivity` (`kind`, `agent_path`) | Only these fields are kept; `aggregated_output`, diffs, arguments and results are dropped |
+| Tasks + ETA | `update_plan` arguments | The ETA is an estimate from the pace so far, always labelled `est.` |
+
+Never shown, because Codex does not record them: costs or billing totals, a turn quota, agent progress percentages without a plan, and test pass/fail counts (only a command's exit code).
+
+None of the 0.163 sessions checked for this release (2026-10-04 to 2026-10-20) made an `update_plan` call, so the Tasks card is covered by the fixture only; it stays hidden while a session has no plan.
+
 ## Fields read
 
 From each rollout line: `type`, `timestamp`, and only these payload fields:
@@ -22,9 +42,9 @@ From each rollout line: `type`, `timestamp`, and only these payload fields:
 - `session_meta`: `id`, `parent_thread_id`, `agent_nickname`, `agent_path`, `cwd`, `thread_source`
 - `turn_context`: `model`, `effort` / `reasoning_effort`
 - `response_item` with `name == "update_plan"`: `arguments`
-- `event_msg`: `task_started`, `task_complete`, `turn_aborted`, `token_count.rate_limits`, `token_count.info.last_token_usage.total_tokens`, `token_count.info.model_context_window`, and `item_completed` items of type `CollabAgentToolCall` with `tool == "closeAgent"`
+- `event_msg`: `task_started`, `task_complete` (`duration_ms`, whether `error` is set), `turn_aborted`, `token_count.rate_limits` (`used_percent`, `window_minutes`, `resets_at`), `token_count.info.last_token_usage.total_tokens`, `token_count.info.total_token_usage`, `token_count.info.model_context_window`, and `item_completed` items: `CollabAgentToolCall` with `tool == "closeAgent"`, `CommandExecution` (`command`, `exit_code`), `FileChange` (`changes` keys and their `type`), `McpToolCall` (`server`, `tool`, `status`), `SubAgentActivity` (`kind`, `agent_path`), `ContextCompaction`
 
-Every line is JSON-parsed in memory to find these fields. Message text, reasoning, command output and tool results are never stored, displayed or sent anywhere.
+Every line is JSON-parsed in memory to find these fields. Message text, reasoning, command arguments and output, diffs and tool results are never stored, displayed or sent anywhere. A command is reduced to its program and subcommand (`npm test`), a path to its last two parts.
 
 ## Known limits
 

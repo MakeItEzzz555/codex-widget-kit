@@ -1,7 +1,7 @@
 {
   "name": "codex-widget-kit",
-  "version": "0.1.0",
-  "description": "Live usage rings, effort meter, task ETA and sub-agent cards for OpenAI Codex CLI, in their own terminal pane.",
+  "version": "0.2.0",
+  "description": "A live dashboard for OpenAI Codex CLI: session, context, tokens, turns, limits, tasks, sub-agents and recent activity, in its own terminal pane.",
   "type": "module",
   "bin": {
     "codex-widgets": "bin/codex-widgets.mjs"

@@ -4,7 +4,7 @@
 
 ### Your Codex session, at a glance.
 
-**Live usage rings, an effort meter, task ETA and sub-agent cards for OpenAI Codex CLI, in their own terminal pane.**
+**A live developer dashboard for OpenAI Codex CLI: session, context, tokens, turns, limits, tasks, sub-agents and recent activity, in its own terminal pane.**
 
 [![tests](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml/badge.svg)](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
@@ -19,46 +19,31 @@
 
 ---
 
-### How much of my 5-hour limit is left? Is it still thinking hard? How long until it's done?
+### How much of my 5-hour limit is left? How full is the context? How many tokens has this session used? What did Codex just run?
 
-Codex knows all of that, and writes it down as it works. **Codex Widget Kit draws it**: three braille rings, a heat-coloured effort meter, a progress bar that learns the pace of your plan, and a card for every sub-agent Codex spawns. Everything updates once a second, in a separate terminal pane you can put anywhere.
+Codex knows all of that, and writes it down as it works. **Codex Widget Kit draws it** as a grid of cards that follows your terminal width: three columns from 132 columns, two from 76, one from 40, and a compact one-reading-per-line view below that. It updates once a second, in a separate pane you can put anywhere.
 
-It's the Codex port of [`turn-meters`](https://github.com/MakeItEzzz555/claude-widget-kit) from the Claude Widget Kit. The visuals are the same. Codex has no API for drawing inside its own interface, so the widgets get a terminal of their own.
+It's the Codex port of [`turn-meters`](https://github.com/MakeItEzzz555/claude-widget-kit) from the Claude Widget Kit. Codex has no API for drawing inside its own interface, so the dashboard gets a terminal of its own.
 
-```text
- ⢀⣴⡶⠿⠿⢶⣦⡀    ⢀⣴⡶⠿⠿⢶⣦⡀    ⢀⣴⡶⠿⠿⢶⣦⡀
-⢰⡿⠋    ⠙⢿⡆  ⢰⡿⠋    ⠙⢿⡆  ⢰⡿⠋    ⠙⢿⡆
-⣿⡇ 70%  ⢸⣿  ⣿⡇ 15%  ⢸⣿  ⣿⡇ 50%  ⢸⣿   effort ▂▃▄▆█ high · gpt-6.1-sol
-⠸⣷⣄    ⣠⣾⠇  ⠸⣷⣄    ⣠⣾⠇  ⠸⣷⣄    ⣠⣾⠇   tasks  ██████████░░░░░░░░░░░░░░░░░░░░ 1/4 · est. 5 min
- ⠈⠻⠷⣶⣶⠾⠟⠁    ⠈⠻⠷⣶⣶⠾⠟⠁    ⠈⠻⠷⣶⣶⠾⠟⠁
- 5h left    week left    ctx left
+![The dashboard at 150 columns, drawn from a real Codex 0.163 session](docs/screenshots/dashboard-150.png)
 
-╭────────────────────────────────────────────╮
-│ ● Codex main                               │
-│ ▸ Fix the bug                              │
-│ ██████░░░░░░░░░░░░░░░░░░░ 1/4 · est. 5 min │
-│ ▂▃▄▆█ high · gpt-6.1-sol                   │
-╰────────────────────────────────────────────╯
-╭────────────────────────────────────────────╮
-│ ● Curie scan_repo                          │
-│ no task list yet                           │
-│ ▂▃▄▆█ medium · gpt-6.1-sol                 │
-╰────────────────────────────────────────────╯
-```
+*A real session at 150 columns, captured from the terminal (no mock data). At 80 columns the same cards stack two by two: [screenshot](docs/screenshots/dashboard-80.png).*
 
 ## What you get
 
 | Widget | What it shows | Source |
 |---|---|---|
-| **5h ring** | Share of your 5-hour limit left; green > 50 %, amber > 20 %, red below | `rate_limits` window of 300 min |
-| **Week ring** | Share of your weekly limit left | `rate_limits` window of 10 080 min |
-| **Context ring** | Context window left, computed exactly like Codex's `context-remaining` | `last_token_usage` and `model_context_window` |
-| **Effort meter** | `▂▃▄▆█` ticks from minimal to xhigh, plus the model | `turn_context` |
-| **Task bar + ETA** | Steps done, the step it's on, and a time estimate from the pace so far | `update_plan` calls |
-| **Agent cards** | One card per live sub-agent: nickname, role, running/idle, model and effort | sub-agent rollouts, `closeAgent` |
-| **Status line** *(optional)* | Codex's built-in footer items, set up to mirror the band | `[tui].status_line` |
+| **Session** | Running or idle, elapsed time, the live turn's time, last activity, effort and model | `session_meta` timestamp, `task_started` / `task_complete`, `turn_context` |
+| **Context** | Context left, computed exactly like Codex's `context-remaining`, tokens in the window, and how often it was compacted | `last_token_usage`, `model_context_window`, `ContextCompaction` items |
+| **Tokens** | Session totals: input, cached input, output, reasoning, with a sparkline of output tokens per request | `token_count.info.total_token_usage` |
+| **5h limit · Weekly limit** | Share left (the v0.1 braille ring in wide layouts), share used, and the reset countdown | `rate_limits` windows of 300 and 10 080 min, `resets_at` |
+| **Turns** | Completed turns, average and last length, live turn, a sparkline of turn lengths. A count, never "n of m": Codex has no turn quota | `task_complete.duration_ms`; a turn that ended on an error is not counted |
+| **Tasks** | Steps done, the step it's on, and an ETA labelled `est.` from the pace so far | `update_plan` calls (hidden when Codex runs without a plan) |
+| **Agents** | The main thread and every live sub-agent: nickname, role, running/idle, model, effort, and its plan when it has one | sub-agent rollouts, `closeAgent` |
+| **Recent activity** | The last 8 events: commands (program and subcommand only, with a non-zero exit code), files created/edited/deleted (last two path parts), MCP calls, sub-agent starts, compactions, failed turns | `item_completed` items |
+| **Status line** *(optional)* | Codex's built-in footer items, set up to mirror the dashboard | `[tui].status_line` |
 
-The rings sit beside the effort and task rows when the pane is wide enough. In a narrow pane they stack. Colour follows `NO_COLOR`, and piped output is plain text.
+Every reading says when it's missing ("Waiting for rate limits", "No completed turn yet") instead of showing a made-up number. See [CAPABILITY.md](CAPABILITY.md) for the source of every field.
 
 ## Install
 
@@ -91,17 +76,22 @@ Needs Node.js 20 or newer and Codex CLI (tested with 0.163). macOS and Linux.
 
 | Terminal | Split |
 |---|---|
-| **tmux** | `tmux split-window -h -l 48 codex-widgets` |
+| **tmux** | `tmux split-window -h -l 80 codex-widgets` |
 | **Ghostty** | `⌘D`, then `codex-widgets` |
 | **iTerm2** | `⌘D`, then `codex-widgets` |
 | **macOS Terminal** | a second window: `⌘N`, then `cd` to the project and run `codex-widgets` |
 | **VS Code / Cursor** | split the integrated terminal, then `codex-widgets` |
 
 ```text
-codex-widgets [--cwd <folder>] [--once]
-  --cwd   follow the session for another folder (default: the current one)
-  --once  print one frame and exit, e.g. for scripts or a quick look
+codex-widgets [--cwd <folder>] [--once] [--layout auto|compact|standard|expanded] [--theme dark|light] [--ascii]
+  --cwd     follow the session for another folder (default: the current one)
+  --once    print one frame and exit, e.g. for scripts or a quick look
+  --layout  auto follows the width; compact is one line per reading; standard caps the grid at two columns
+  --theme   dark (default) or light; picked from COLORFGBG when it says the background is light
+  --ascii   plain ASCII borders, bars and ticks, for fonts without box drawing or braille (also when TERM=dumb)
 ```
+
+`NO_COLOR` turns colour off; every reading stays readable without it.
 
 ## How it works
 
@@ -112,18 +102,20 @@ codex-widgets [--cwd <folder>] [--once]
                      codex-widgets: newest session for this folder
                        + every sub-agent whose parent is that session
                                    │
-                 ┌─────────────────┼─────────────────┐
-                 ▼                 ▼                 ▼
-          usage rings       effort + tasks       agent cards
+              ┌──────────────┬─────┴──────┬──────────────┐
+              ▼              ▼            ▼              ▼
+       session/turns   context/tokens   limits     agents/activity
 ```
 
 - **Read-only.** It never writes to `~/.codex`, never touches `auth.json`, history or databases, and never sends anything anywhere. It reads only the fields listed in [CAPABILITY.md](CAPABILITY.md). Prompts, outputs and messages are skipped without being read.
 - **Honest numbers.** The context ring uses Codex's own formula, with its 12k-token baseline. If Codex hasn't reported a reading yet, the ring stays hidden. No plan means no task bar, and no sub-agents means "No agents running". Nothing is ever estimated from thin air.
-- **Robust.** It skips malformed lines, waits for half-written lines to finish, and re-scans for new sessions every 5 seconds.
+- **Private.** Commands show their program and subcommand (`npm test`), never arguments, environment or output. Paths show their last two parts (`src/widget.ts`). Control characters are stripped before drawing.
+- **Robust and bounded.** It skips malformed lines, waits for half-written lines to finish, and re-scans for new sessions every 5 seconds. Rollouts are read in 8 MB chunks; a synthetic 200 MB rollout parsed in about 0.3 s with a 65 MB heap, and the state it keeps is capped (8 activity rows, 32 sparkline samples, 500 file paths).
+- **Light on the terminal.** Only the lines that changed are rewritten, and a frame taller than the pane is cut to fit.
 
 ## Status line
 
-Codex's built-in status line can mirror the band inside Codex itself:
+Codex's built-in status line can mirror the dashboard inside Codex itself:
 
 ```toml
 [tui]

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// codex-widgets: usage rings, effort, task progress and agent cards for the Codex session in a folder.
+// codex-widgets: a live dashboard (session, context, tokens, turns, limits, tasks, agents, activity) for the Codex session in a folder.
 // Run it in its own terminal pane beside `codex`. It only reads Codex's rollout files.
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -8,10 +8,23 @@ import { parseArgs } from 'node:util'
 import { frame, toAnsi } from '../lib/render.mjs'
 import { readMeta, recentRollouts, RolloutTail } from '../lib/rollout.mjs'
 
-const USAGE = 'usage: codex-widgets [--cwd <folder>] [--once]'
+const USAGE = 'usage: codex-widgets [--cwd <folder>] [--once] [--layout auto|compact|standard|expanded] [--theme dark|light] [--ascii]'
+const LAYOUTS = ['auto', 'compact', 'standard', 'expanded']
+const THEMES = ['dark', 'light']
 let options
 try {
-  options = parseArgs({ options: { cwd: { type: 'string' }, once: { type: 'boolean' }, help: { type: 'boolean', short: 'h' } } }).values
+  options = parseArgs({
+    options: {
+      cwd: { type: 'string' },
+      once: { type: 'boolean' },
+      layout: { type: 'string', default: 'auto' },
+      theme: { type: 'string' },
+      ascii: { type: 'boolean' },
+      help: { type: 'boolean', short: 'h' },
+    },
+  }).values
+  if (!LAYOUTS.includes(options.layout)) throw new Error(`--layout must be one of ${LAYOUTS.join(', ')}`)
+  if (options.theme !== undefined && !THEMES.includes(options.theme)) throw new Error(`--theme must be one of ${THEMES.join(', ')}`)
 } catch (error) {
   console.error(`${error.message}\n${USAGE}`)
   process.exit(2)
@@ -24,6 +37,13 @@ if (options.help) {
 const cwd = resolve(options.cwd ?? process.cwd())
 const sessions = join(process.env.CODEX_HOME ?? join(homedir(), '.codex'), 'sessions')
 const isColor = process.env.NO_COLOR === undefined && (options.once ? process.stdout.isTTY : true)
+// COLORFGBG ends in the background's palette index; 7 and 15 are light backgrounds
+const background = Number(process.env.COLORFGBG?.split(';').pop())
+const look = {
+  layout: options.layout,
+  theme: options.theme ?? (background === 7 || background === 15 ? 'light' : 'dark'),
+  ascii: options.ascii === true || process.env.TERM === 'dumb',
+}
 const metas = new Map()
 const tails = new Map()
 let main = null
@@ -63,7 +83,7 @@ const render = () => {
   if (main === null) return `\n Waiting for a Codex session in ${cwd}\n`
   const closed = new Set(main.thread.closed)
   const live = agents.map(tail => tail.thread).filter(thread => !closed.has(thread.id))
-  return frame({ main: main.thread, agents: live }, columns, Date.now())
+  return frame({ main: main.thread, agents: live }, columns, Date.now(), look)
     .map(line => toAnsi(line, isColor))
     .join('\n')
 }
@@ -75,13 +95,18 @@ if (options.once) {
   process.exit(0)
 }
 
-let shown = ''
+let shown = []
 const draw = (force = false) => {
-  const next = render()
-  if (!force && next === shown) return
+  // a frame taller than the pane would scroll the alternate screen, so it is cut to the rows there are
+  const next = render().split('\n').slice(0, process.stdout.rows || Infinity)
+  let out = ''
+  next.forEach((line, row) => {
+    if (force || line !== shown[row]) out += `\x1b[${row + 1};1H${line}\x1b[K`
+  })
+  if (force || next.length < shown.length) out += `\x1b[${next.length + 1};1H\x1b[J`
   shown = next
-  // home, draw, clear what is left below
-  process.stdout.write(`\x1b[H${next.split('\n').join('\x1b[K\n')}\x1b[K\x1b[J`)
+  // only the lines that changed are written
+  if (out !== '') process.stdout.write(out)
 }
 
 const restore = () => process.stdout.write('\x1b[?25h\x1b[?1049l')
