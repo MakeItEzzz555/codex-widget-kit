@@ -1,10 +1,16 @@
 <div align="center">
 
-# ◔ Codex Widget Kit
+# Codex Widget Kit
+
+<img src="assets/logo.png" alt="Codex Widget Kit logo" width="420">
 
 ### Your Codex session, at a glance.
 
 **A live developer dashboard for OpenAI Codex CLI: session, context, tokens, turns, limits, tasks, sub-agents and recent activity, in its own terminal pane.**
+
+<img src="assets/showcase.png" alt="Codex Widget Kit concept illustration featuring a terminal session and telemetry cards" width="100%">
+
+<sub>Conceptual illustration of the visual direction, not a live screenshot. The real terminal capture is below.</sub>
 
 [![tests](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml/badge.svg)](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
