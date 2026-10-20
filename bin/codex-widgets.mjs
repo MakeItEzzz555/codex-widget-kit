@@ -29,8 +29,11 @@ const tails = new Map()
 let main = null
 
 const metaOf = file => {
-  if (!metas.has(file)) metas.set(file, readMeta(file))
-  return metas.get(file)
+  if (metas.has(file)) return metas.get(file)
+  // a failed read is retried: Codex may still be writing the first line
+  const meta = readMeta(file)
+  if (meta !== null) metas.set(file, meta)
+  return meta
 }
 const tailOf = file => {
   if (!tails.has(file)) tails.set(file, new RolloutTail(file))

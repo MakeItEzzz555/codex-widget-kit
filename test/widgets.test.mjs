@@ -54,6 +54,15 @@ test('the frame draws rings, effort, tasks and one card per live agent', () => {
   assert.ok(text(frame({ main: root.thread, agents: [] }, 60, at)).includes('No agents running'))
 })
 
+test('a finished plan stays up until the next turn starts', () => {
+  const record = (type, payload) => `${JSON.stringify({ type, timestamp: '2026-10-20T10:00:00.000Z', payload })}\n`
+  const done = record('response_item', { type: 'function_call', name: 'update_plan', arguments: JSON.stringify({ plan: [{ step: 'a', status: 'completed' }] }) })
+  const after = applyText(emptyThread(), done).thread
+  assert.notEqual(after.plan, null)
+  assert.equal(applyText(after, record('event_msg', { type: 'task_complete' })).thread.plan, after.plan)
+  assert.equal(applyText(after, record('event_msg', { type: 'task_started' })).thread.plan, null)
+})
+
 test('text from the rollout cannot write terminal escapes', () => {
   const { thread } = applyText(
     emptyThread(),
