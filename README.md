@@ -2,6 +2,8 @@
 
 # Codex Widget Kit
 
+<img src="assets/logo.png" alt="Codex Widget Kit logo" width="420">
+
 ### Your Codex session, at a glance.
 
 **Read-only live usage, task progress, and sub-agent cards alongside Codex CLI.**
