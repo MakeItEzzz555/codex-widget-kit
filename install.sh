@@ -42,12 +42,15 @@ if [ "${1:-}" = "--statusline" ]; then
   if [ -f "$CONFIG" ] && grep -q '^status_line *=' "$CONFIG"; then
     say "config.toml already sets status_line; left unchanged (see $DIR/config/statusline.toml)"
   else
+    # config.toml can hold secrets (it is 0600 by default); keep new files private and keep its mode
+    umask 077
     BACKUP="$CONFIG.before-widget-kit-$(date +%Y%m%d-%H%M%S)"
     if [ -f "$CONFIG" ]; then cp -p "$CONFIG" "$BACKUP"; else : > "$BACKUP"; fi
     WIDGET_KIT_LINES='status_line = ["model-with-reasoning", "task-progress", "context-remaining", "five-hour-limit", "weekly-limit", "run-state", "git-branch"]
 status_line_use_colors = true'
     export WIDGET_KIT_LINES
     NEXT="$CONFIG.widget-kit.$$"
+    cp -p "$BACKUP" "$NEXT"
     if grep -q '^\[tui\] *$' "$BACKUP"; then
       # insert right under the existing [tui] header so the keys land in that table
       awk '{ print } /^\[tui\] *$/ && !done { print ENVIRON["WIDGET_KIT_LINES"]; done = 1 }' "$BACKUP" > "$NEXT"
