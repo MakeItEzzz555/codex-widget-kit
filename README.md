@@ -1,10 +1,14 @@
 <div align="center">
 
-# ◔ Codex Widget Kit
+# Codex Widget Kit
 
 ### Your Codex session, at a glance.
 
-**Live usage rings, an effort meter, task ETA and sub-agent cards for OpenAI Codex CLI, in their own terminal pane.**
+**Read-only live usage, task progress, and sub-agent cards alongside Codex CLI.**
+
+<img src="assets/showcase.png" alt="Codex Widget Kit concept illustration featuring a terminal session and telemetry cards" width="100%">
+
+<sub>Conceptual UI illustration of the visual direction, not a live screenshot. Some pictured cards and figures are planned for v0.2.0; see the supported features below.</sub>
 
 [![tests](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml/badge.svg)](https://github.com/MakeItEzzz555/codex-widget-kit/actions/workflows/test.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
@@ -25,26 +29,7 @@ Codex knows all of that, and writes it down as it works. **Codex Widget Kit draw
 
 It's the Codex port of [`turn-meters`](https://github.com/MakeItEzzz555/claude-widget-kit) from the Claude Widget Kit. The visuals are the same. Codex has no API for drawing inside its own interface, so the widgets get a terminal of their own.
 
-```text
- ⢀⣴⡶⠿⠿⢶⣦⡀    ⢀⣴⡶⠿⠿⢶⣦⡀    ⢀⣴⡶⠿⠿⢶⣦⡀
-⢰⡿⠋    ⠙⢿⡆  ⢰⡿⠋    ⠙⢿⡆  ⢰⡿⠋    ⠙⢿⡆
-⣿⡇ 70%  ⢸⣿  ⣿⡇ 15%  ⢸⣿  ⣿⡇ 50%  ⢸⣿   effort ▂▃▄▆█ high · gpt-6.1-sol
-⠸⣷⣄    ⣠⣾⠇  ⠸⣷⣄    ⣠⣾⠇  ⠸⣷⣄    ⣠⣾⠇   tasks  ██████████░░░░░░░░░░░░░░░░░░░░ 1/4 · est. 5 min
- ⠈⠻⠷⣶⣶⠾⠟⠁    ⠈⠻⠷⣶⣶⠾⠟⠁    ⠈⠻⠷⣶⣶⠾⠟⠁
- 5h left    week left    ctx left
 
-╭────────────────────────────────────────────╮
-│ ● Codex main                               │
-│ ▸ Fix the bug                              │
-│ ██████░░░░░░░░░░░░░░░░░░░ 1/4 · est. 5 min │
-│ ▂▃▄▆█ high · gpt-6.1-sol                   │
-╰────────────────────────────────────────────╯
-╭────────────────────────────────────────────╮
-│ ● Curie scan_repo                          │
-│ no task list yet                           │
-│ ▂▃▄▆█ medium · gpt-6.1-sol                 │
-╰────────────────────────────────────────────╯
-```
 
 ## What you get
 
